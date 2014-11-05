@@ -1,5 +1,4 @@
 #include "Quadtree.h"
-#include "Object.h"
 
 Quadtree::Quadtree() :
 left( 0 ),
@@ -25,8 +24,6 @@ isLeaf( true )
 
 Quadtree::~Quadtree()
 {
-	if ( !isLeaf )
-		delete [] nodes;
 }
 
 void Quadtree::AddObject( Object *object )
@@ -45,11 +42,8 @@ void Quadtree::AddObject( Object *object )
 	for ( int n = 0; n < NodeCount; ++n ) {
 		if ( nodes[n].contains( object ) ) {
 			nodes[n].AddObject( object );
-			return;
 		}
 	}
-
-	objects.push_back( object );
 }
 
 void Quadtree::Clear()
@@ -61,6 +55,8 @@ void Quadtree::Clear()
 			nodes[n].Clear();
 		}
 	}
+	
+	delete [] nodes;
 }
 
 vector<Object*> Quadtree::GetObjectsAt( double x, double y )
@@ -88,10 +84,24 @@ vector<Object*> Quadtree::GetObjectsAt( double x, double y )
 
 bool Quadtree::contains( Object *object )
 {
-	return 	object->left > left &&
-		object->right < right &&
-		object->top > top &&
-		object->down < down;
+	if (object->left > left && object->left < right && 
+        object->top > top && object->top < down)
+        return true;
+    
+    else if (object->right > left && object->right < right && 
+        object->top > top && object->top < down)
+        return true;
+    
+    else if (object->left > left && object->left < right && 
+        object->down > top && object->down < down)
+        return true;
+    
+    else if (object->right > left && object->right < right && 
+        object->down > top && object->down < down)
+        return true;
+    
+    else
+        return false;
 }
 
 bool Quadtree::contains( double x, double y )
@@ -111,13 +121,13 @@ void Quadtree::createLeaves()
 
 void Quadtree::moveObjectsToLeaves()
 {
-	for ( int n = 0; n < NodeCount; ++n ) {
-		for ( unsigned int m = 0; m < objects.size(); ++m ) {
-			if ( nodes[n].contains( objects[m] ) ) {
-				nodes[n].AddObject( objects[m] );
-				objects.erase( objects.begin() + m );
-				--m;
-			}
-		}
-	}
+	for ( unsigned int m = 0; m < objects.size(); ++m ) {
+        for ( int n = 0; n < NodeCount; ++n ) {
+            if ( nodes[n].contains( objects[m] ) ) {
+                nodes[n].AddObject( objects[m] );
+            }
+        }
+        objects.erase( objects.begin() + m );
+        --m;
+    }
 }

@@ -1,10 +1,10 @@
 #ifndef __QUADTREE_H__
 #define __QUADTREE_H__
 
+#include "Object.h"
+
 #include <vector>
 using std::vector;
-
-class Object;
 
 class Quadtree {
 
