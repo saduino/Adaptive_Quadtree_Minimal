@@ -26,7 +26,7 @@ Quadtree::~Quadtree()
 {
 }
 
-void Quadtree::AddObject( Object *object )
+void Quadtree::AddObject( ObjectPtr object )
 {
 	if ( isLeaf ) {
 		objects.push_back( object );
@@ -40,8 +40,8 @@ void Quadtree::AddObject( Object *object )
 	}
 
 	for ( int n = 0; n < NodeCount; ++n ) {
-		if ( nodes[n].contains( object ) ) {
-			nodes[n].AddObject( object );
+		if ( nodes[n]->contains( object ) ) {
+			nodes[n]->AddObject( object );
 		}
 	}
 }
@@ -52,28 +52,28 @@ void Quadtree::Clear()
 
 	if ( !isLeaf ) {
 		for ( int n = 0; n < NodeCount; ++n ) {
-			nodes[n].Clear();
+			nodes[n]->Clear();
 		}
 	}
 	
-	delete [] nodes;
+	nodes.clear();
 }
 
-vector<Object*> Quadtree::GetObjectsAt( double x, double y )
+std::vector<ObjectPtr> Quadtree::GetObjectsAt( double x, double y )
 {
 	if ( isLeaf ) {
 		return objects;
 	}
 
-	vector<Object*> returnedObjects;
-	vector<Object*> childObjects;
+	std::vector<ObjectPtr> returnedObjects;
+	std::vector<ObjectPtr> childObjects;
 
 	if ( !objects.empty() )
 		returnedObjects.insert( returnedObjects.end(), objects.begin(), objects.end() );
 
 	for ( int n = 0; n < NodeCount; ++n ) {
-		if ( nodes[n].contains( x, y ) ) {
-			childObjects = nodes[n].GetObjectsAt( x, y );
+		if ( nodes[n]->contains( x, y ) ) {
+			childObjects = nodes[n]->GetObjectsAt( x, y );
 			returnedObjects.insert( returnedObjects.end(), childObjects.begin(), childObjects.end() );
 			break;
 		}
@@ -82,7 +82,7 @@ vector<Object*> Quadtree::GetObjectsAt( double x, double y )
 	return returnedObjects;
 }
 
-bool Quadtree::contains( Object *object )
+bool Quadtree::contains( ObjectPtr object )
 {
 	if (object->left > left && object->left < right && 
         object->top > top && object->top < down)
@@ -112,19 +112,22 @@ bool Quadtree::contains( double x, double y )
 
 void Quadtree::createLeaves()
 {
-	nodes = new Quadtree[4];
-	nodes[NW] = Quadtree( left, (left+right)/2, top, (top+down)/2, numObjectsToGrow );
-	nodes[NE] = Quadtree( (left+right)/2, right, top, (top+down)/2, numObjectsToGrow );
-	nodes[SW] = Quadtree( left, (left+right)/2, (top+down)/2, down, numObjectsToGrow );
-	nodes[SE] = Quadtree( (left+right)/2, right, (top+down)/2, down, numObjectsToGrow );
+	Quadtree* quad0 = new Quadtree( left, (left+right)/2, top, (top+down)/2, numObjectsToGrow );
+  nodes.push_back(boost::shared_ptr<Quadtree>(quad0));
+  Quadtree* quad1 = new Quadtree( (left+right)/2, right, top, (top+down)/2, numObjectsToGrow );
+  nodes.push_back(boost::shared_ptr<Quadtree>(quad1));
+  Quadtree* quad2 = new Quadtree( left, (left+right)/2, (top+down)/2, down, numObjectsToGrow );
+  nodes.push_back(boost::shared_ptr<Quadtree>(quad2));
+  Quadtree* quad3 = new Quadtree( (left+right)/2, right, (top+down)/2, down, numObjectsToGrow );
+  nodes.push_back(boost::shared_ptr<Quadtree>(quad3));
 }
 
 void Quadtree::moveObjectsToLeaves()
 {
 	for ( unsigned int m = 0; m < objects.size(); ++m ) {
         for ( int n = 0; n < NodeCount; ++n ) {
-            if ( nodes[n].contains( objects[m] ) ) {
-                nodes[n].AddObject( objects[m] );
+            if ( nodes[n]->contains( objects[m] ) ) {
+                nodes[n]->AddObject( objects[m] );
             }
         }
         objects.erase( objects.begin() + m );

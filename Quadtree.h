@@ -4,7 +4,13 @@
 #include "Object.h"
 
 #include <vector>
-using std::vector;
+
+#include <boost/shared_ptr.hpp>
+
+class Quadtree;
+
+typedef boost::shared_ptr<Quadtree> QuadtreePtr;
+typedef boost::shared_ptr<Object> ObjectPtr;
 
 class Quadtree {
 
@@ -23,11 +29,11 @@ public:
 
 					~Quadtree();
 
-	void				AddObject( Object *object );
+	void				AddObject( ObjectPtr object );
 
 	void				Clear();
 
-	vector<Object*>			GetObjectsAt( double x, double y );
+	std::vector<ObjectPtr>			GetObjectsAt( double x, double y );
 
 private:
 	double				left;
@@ -40,13 +46,13 @@ private:
 
 	unsigned int			numObjectsToGrow;
 
-	vector<Object*>			objects;
+	std::vector<ObjectPtr> objects;
 
-	Quadtree * 			nodes;
+	std::vector<QuadtreePtr> nodes;
 
 	bool				isLeaf;
 	
-	bool				contains( Object *object );
+	bool				contains( ObjectPtr object );
 	
 	bool				contains( double x, double y );
 
